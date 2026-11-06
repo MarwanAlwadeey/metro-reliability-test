@@ -1,0 +1,38 @@
+name: Reliability Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      total:
+        description: 'Number of requests'
+        default: '200'
+      hours:
+        description: 'Test time in hours (max 5)'
+        default: '4'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run the test
+        run: node reliabilityTest.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON: ${{ secrets.SUPABASE_ANON }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          TOTAL: ${{ github.event.inputs.total }}
+          PERIOD_HOURS: ${{ github.event.inputs.hours }}
+
+      - name: Save the csv file
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reliability-log
+          path: reliability-log.csv
